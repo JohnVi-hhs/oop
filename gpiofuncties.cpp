@@ -4,60 +4,62 @@
 #include <string.h>
 
 #include "gpiofuncties.h"
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+#define GPIODIR "/sys/class/gpio/"
 
 
-int exportt(int nr){
-   FILE *fp;
-   char tekst[10];
- 
-    fp=fopen("/sys/class/gpio/export","w");
-    if (fp==0)
-       return 0;
-    sprintf(tekst,"%d",nr);
-	fprintf(fp,"%s",tekst);
-    fclose(fp);
-
-	return 1;
-}
-
-int digitalWrite(int nr,int v) {
-	FILE *fp;
-	char gpionr[50]="/sys/class/gpio/gpio";
-	char tekst[10];
-	sprintf(tekst,"%d",nr);
-	strcat(gpionr,tekst);
-	strcat(gpionr,"/value");
-	fp=fopen(gpionr,"w");
-    if (fp==0)
-       return -399;
-	fprintf(fp,"%d",v);
-    fclose(fp);
-
-	return 0;
+bool fileconsist(string s) {
+    ifstream f(s);
+    return f.good();
 
 }
 
-int pinMode(unsigned pinNr,unsigned OUTPUT) {
-	FILE *fp;
-    char tekst[10];
-	char gpionr[50]="/sys/class/gpio/gpio";
+int zetPinMode(string m,int pnr) {
+    string temp(GPIODIR);
+    string dir("gpio");
+    dir += to_string(pnr);
+    temp +=dir;
+    if(!fileconsist(temp)){
+        temp = GPIODIR;
+        temp += "export";
+        ofstream of(temp);
+        of<<to_string(pnr);
+        of.close();
+    }
+    temp = GPIODIR; 
+    temp += dir;
+    temp += "/direction";
 
-    int rt=exportt(pinNr);
-	if(!rt)
-	     return -99;
-    usleep(100000);  
-	
-    sprintf(tekst,"%d",pinNr);
-    strcat(gpionr,tekst);
-    strcat(gpionr,"/direction");
-	printf("%s\n",gpionr);
-    fp=fopen(gpionr,"w+");
-    if (fp==0)
-       return -99;
-    rt=fprintf(fp,"out");
-     if (rt<0)
-       return rt-200;
-    fclose(fp);
+    ofstream of(temp);
+    if(m=="out")
+        of<<"out";
+    else
+        of<<"in";
+    of.close(); 
     return 1;
 }
 
+int zetPinOpOutput(int pnr) {
+     return zetPinMode("out",pnr);
+
+}
+int zetPinOpInput(int pnr) {
+     return zetPinMode("in",pnr);
+}
+
+int zetPinWaarde(int pin,int w) {
+    string fl(GPIODIR "gpio");
+    fl += to_string(pin);
+    fl += "/value";
+    if(!fileconsist(fl)) 
+        return 0;
+    ofstream of(fl);
+    of<<to_string(w);
+    
+    of.close(); 
+    return 1; 
+}
