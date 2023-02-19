@@ -1,8 +1,8 @@
+#include <unistd.h>
 #include <iostream>
 #include "gpiofuncties.h"
 
 using namespace std;
-
 #define RODELED 135
 
 int main() {
@@ -15,5 +15,7 @@ int main() {
     }
     cout<<"b= "<<b<<endl;//return waarde of het gelukt is.
     b=zetPinWaarde(RODELED,1);  //Zet de rode LED aan.
+    usleep(1000000);
+    b=zetPinWaarde(RODELED,0);  //Zet de rode LED uit.
     cout<<"einde"<<endl;
 }
